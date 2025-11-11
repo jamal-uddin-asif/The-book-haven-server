@@ -1,11 +1,13 @@
 const express = require("express");
 const cors = require("cors");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+require("dotenv").config();
 const app = express();
 const port = process.env.PORT || 3000;
 
+
 const uri =
-  "mongodb+srv://booksDB:Lq3y3xiJIALEYJhG@cluster0.ltnfqwl.mongodb.net/?appName=Cluster0";
+  `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.ltnfqwl.mongodb.net/?appName=Cluster0`;
 const client = new MongoClient(uri, {
   serverApi: {
     version: ServerApiVersion.v1,
@@ -32,20 +34,30 @@ async function run() {
 
 
     app.get('/latest-books', async(req, res)=>{
+        const cursor = booksCollection.find().sort({create_at: -1}).limit(6)
+        const result = await cursor.toArray()
+        res.send(result)
+    })
+
+    app.get('/all-books', async(req, res)=>{
         const cursor = booksCollection.find()
         const result = await cursor.toArray()
         res.send(result)
     })
     
-    app.get('/books/:id', async(req, res)=>{
+    app.get('/bookDetails/:id', async(req, res)=>{
         const id = req.params.id
         const filter = {_id: new ObjectId(id)}
         const result = await booksCollection.findOne(filter)
         res.send(result)
     })
-
   
-
+      app.post('/books', async(req, res)=>{
+        const newBook = req.body;
+        // console.log(newBook)
+        const result =await booksCollection.insertOne(newBook)
+        res.send(result)
+    })
 
     await client.db("admin").command({ ping: 1 });
     console.log(
