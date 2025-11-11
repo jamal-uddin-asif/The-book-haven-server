@@ -36,6 +36,15 @@ async function run() {
         const result = await cursor.toArray()
         res.send(result)
     })
+    
+    app.get('/books/:id', async(req, res)=>{
+        const id = req.params.id
+        const filter = {_id: new ObjectId(id)}
+        const result = await booksCollection.findOne(filter)
+        res.send(result)
+    })
+
+  
 
 
     await client.db("admin").command({ ping: 1 });
