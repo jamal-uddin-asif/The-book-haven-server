@@ -40,7 +40,12 @@ async function run() {
     })
 
     app.get('/all-books', async(req, res)=>{
-        const cursor = booksCollection.find()
+         const email = req.query.email;
+        const query = {}
+        if(email){
+            query.userEmail = email
+        }
+        const cursor = booksCollection.find(query)
         const result = await cursor.toArray()
         res.send(result)
     })
