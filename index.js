@@ -28,6 +28,7 @@ async function run() {
 
     const booksDB = client.db("BooksDB");
     const booksCollection = booksDB.collection("books");
+    const commentsCollections = booksDB.collection('comments')
 
     app.get("/latest-books", async (req, res) => {
       const cursor = booksCollection.find().sort({ create_at: -1 }).limit(6);
@@ -54,7 +55,7 @@ async function run() {
         res.send(result);
       }
       if (sort === "low-high") {
-        const cursor = booksCollection.find().sort({ rating:1 });
+        const cursor = booksCollection.find().sort({ rating: 1 });
         const result = await cursor.toArray();
         res.send(result);
       }
@@ -74,17 +75,41 @@ async function run() {
       res.send(result);
     });
 
-    app.delete('/delete-book/:id', async(req, res)=>{
-      const id = req.params.id
-      const filter = {_id: new ObjectId(id)}
-      const result = await booksCollection.deleteOne(filter)
+    app.delete("/delete-book/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const result = await booksCollection.deleteOne(filter);
+      res.send(result);
+    });
+
+    // comment 
+    app.post('/comments',async(req, res)=>{
+      const comment = req.body;
+      const result = await commentsCollections.insertOne(comment)
       res.send(result)
     })
 
-    app.patch(`/update-Book/:id`, async(req, res)=>{
-      const id = req.params.id
-      console.log(id)
-    })
+    app.patch(`/update-Book/:id`, async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const book = req.body;
+
+      const update = {
+        $set: {
+          title: book.title,
+          author: book.author,
+          genre: book.genre,
+          rating: book.rating,
+          coverImage: book.coverImage,
+          summary: book.summary,
+          userEmail: book.userEmail,
+          userName: book.userName
+        },
+      };
+      const options = {}
+      const result = await booksCollection.updateOne(query, update, options)
+      res.send(result)
+    });
 
     await client.db("admin").command({ ping: 1 });
     console.log(
