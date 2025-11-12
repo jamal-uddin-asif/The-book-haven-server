@@ -75,8 +75,10 @@ async function run() {
     });
 
     app.delete('/delete-book/:id', async(req, res)=>{
-      const id = req.params
-      console.log(id)
+      const id = req.params.id
+      const filter = {_id: new ObjectId(id)}
+      const result = await booksCollection.deleteOne(filter)
+      res.send(result)
     })
 
     await client.db("admin").command({ ping: 1 });
