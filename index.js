@@ -89,6 +89,14 @@ async function run() {
       res.send(result)
     })
 
+    app.get('/comments/:id', async(req, res)=>{
+      const id = req.params.id
+      const filter = {book:id}
+      const cursor = commentsCollections.find(filter)
+      const result = await cursor.toArray()
+      res.send(result)
+    })
+
     app.patch(`/update-Book/:id`, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
