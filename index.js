@@ -24,11 +24,11 @@ app.get("/", (req, res) => {
 
 async function run() {
   try {
-    await client.connect();
+    // await client.connect();
 
     const booksDB = client.db("BooksDB");
     const booksCollection = booksDB.collection("books");
-    const commentsCollections = booksDB.collection('comments')
+    const commentsCollections = booksDB.collection("comments");
 
     app.get("/latest-books", async (req, res) => {
       const cursor = booksCollection.find().sort({ create_at: -1 }).limit(6);
@@ -47,8 +47,31 @@ async function run() {
       res.send(result);
     });
 
+    // Project update code for SCIC
+    app.get("/count-genre", async (req, res) => {
+      const email = req.query.email;
+      const query = {};
+      if (email) {
+        query.userEmail = email;
+      }
+
+      const pipeline = [
+        {
+          $group: {
+            _id: "$genre",
+            count: { $sum: 1 },
+          },
+        },
+      ];
+      const result = await booksCollection.aggregate(pipeline).toArray();
+      res.send(result);
+    });
+
     app.get("/all-books-sort", async (req, res) => {
-      const sort = req.query.sort;
+      const { sort, search, genre } = req.query;
+      console.log({ sort, search, genre });
+      const query = {};
+
       if (sort === "high-low") {
         const cursor = booksCollection.find().sort({ rating: -1 });
         const result = await cursor.toArray();
@@ -59,6 +82,20 @@ async function run() {
         const result = await cursor.toArray();
         res.send(result);
       }
+
+      if (search) {
+        query.title = {
+          title: { $regex: search, $options: "i" },
+        };
+      }
+
+      if(genre){
+        query.genre = genre
+      }
+
+
+      const result = await booksCollection.find(query).toArray();
+      res.send(result);
     });
 
     app.get("/bookDetails/:id", async (req, res) => {
@@ -82,20 +119,20 @@ async function run() {
       res.send(result);
     });
 
-    // comment 
-    app.post('/comments',async(req, res)=>{
+    // comment
+    app.post("/comments", async (req, res) => {
       const comment = req.body;
-      const result = await commentsCollections.insertOne(comment)
-      res.send(result)
-    })
+      const result = await commentsCollections.insertOne(comment);
+      res.send(result);
+    });
 
-    app.get('/comments/:id', async(req, res)=>{
-      const id = req.params.id
-      const filter = {book:id}
-      const cursor = commentsCollections.find(filter)
-      const result = await cursor.toArray()
-      res.send(result)
-    })
+    app.get("/comments/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { book: id };
+      const cursor = commentsCollections.find(filter);
+      const result = await cursor.toArray();
+      res.send(result);
+    });
 
     app.patch(`/update-Book/:id`, async (req, res) => {
       const id = req.params.id;
@@ -111,15 +148,15 @@ async function run() {
           coverImage: book.coverImage,
           summary: book.summary,
           userEmail: book.userEmail,
-          userName: book.userName
+          userName: book.userName,
         },
       };
-      const options = {}
-      const result = await booksCollection.updateOne(query, update, options)
-      res.send(result)
+      const options = {};
+      const result = await booksCollection.updateOne(query, update, options);
+      res.send(result);
     });
 
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!"
     );
