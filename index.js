@@ -69,7 +69,7 @@ async function run() {
 
     app.get("/all-books-sort", async (req, res) => {
       const { sort, search, genre } = req.query;
-      console.log({ sort, search, genre });
+      // console.log({ sort, search, genre });
       const query = {};
 
       if (sort === "high-low") {
