@@ -88,9 +88,7 @@ async function run() {
       }
 
       if (search) {
-        query.title = {
-          title: { $regex: search, $options: "i" },
-        };
+        query.title = { $regex: search, $options: "i" };
       }
 
       if(genre){
