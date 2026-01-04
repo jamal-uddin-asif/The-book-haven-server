@@ -37,14 +37,18 @@ async function run() {
     });
 
     app.get("/all-books", async (req, res) => {
-      const email = req.query.email;
+      const {email, limit = 0, skip = 0} = req.query;
+      // console.log({limit, skip})
       const query = {};
       if (email) {
         query.userEmail = email;
       }
-      const cursor = booksCollection.find(query);
+      const cursor = booksCollection.find(query).skip(Number(skip)).limit(Number(limit));
       const result = await cursor.toArray();
-      res.send(result);
+
+      const count = await booksCollection.countDocuments()
+
+      res.send({result, count});
     });
 
     // Project update code for SCIC
